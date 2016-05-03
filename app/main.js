@@ -2,7 +2,9 @@
 const electron = require('electron');
 /*eslint-enable */
 
-const { app, BrowserWindow, globalShortcut } = electron;
+const electronLocalshortcut = require('electron-localshortcut');
+const { app, BrowserWindow } = electron;
+
 // const Menu = remote.require('menu');
 // const Menu = remote.Menu;
 // const context = require('electron-contextmenu-middleware');
@@ -45,7 +47,7 @@ function createWindow() {
 app.on('ready', () => {
   createWindow();
   // menuInit();
-  globalShortcut.register('CommandOrControl+R', () => {
+  electronLocalshortcut.register('CommandOrControl+R', () => {
     mainWindow.loadURL(gmailUrl);
   });
 });
