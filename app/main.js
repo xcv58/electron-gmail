@@ -5,52 +5,39 @@ const electron = require('electron');
 const electronLocalshortcut = require('electron-localshortcut');
 const { app, BrowserWindow } = electron;
 
-// const Menu = remote.require('menu');
-// const Menu = remote.Menu;
-// const context = require('electron-contextmenu-middleware');
-// console.log(context);
-// const input = require('electron-input-menu');
-// console.log(input);
-// const debug = require('debug-menu').contextMdw;
-
-// context.use(input);
-// context.use(debug);
-// context.activate();
-
-
-let mainWindow = null;
+let windows = [];
 const gmailUrl = 'https://mail.google.com/mail/u/0/?ibxr=0';
 
-function createWindow() {
-  mainWindow = new BrowserWindow({ titleBarStyle: 'hidden', frame: false });
-  mainWindow.maximize();
+const setShortcuts = (newWinCallback = () => {}) => {
+  electronLocalshortcut.register('CommandOrControl+N', newWinCallback);
 
-
-  // mainWindow.loadURL(`file://${__dirname}/index.html`);
-  mainWindow.loadURL(gmailUrl);
-
-  // Open the DevTools.
-  // mainWindow.webContents.openDevTools();
-
-  // Emitted when the window is closed.
-  mainWindow.on('closed', () => {
-    // Dereference the window object, usually you would store windows
-    // in an array if your app supports multi windows, this is the time
-    // when you should delete the corresponding element.
-    mainWindow = null;
+  electronLocalshortcut.register('CommandOrControl+R', () => {
+    windows
+    .filter(win => win.isFocused())
+    .map(win => win.loadURL(gmailUrl));
   });
-}
+};
+
+const newWindow = () => {
+  const win = new BrowserWindow({ titleBarStyle: 'hidden', frame: false });
+  win.maximize();
+  win.loadURL(gmailUrl);
+  return win;
+};
+
+const createWindow = () => {
+  const win = newWindow();
+  windows.push(win);
+  win.on('closed', () => {
+    windows = windows.filter(ele => ele !== win);
+  });
+  setShortcuts(createWindow);
+};
 
 // This method will be called when Electron has finished
 // initialization and is ready to create browser windows.
 // Some APIs can only be used after this event occurs.
-app.on('ready', () => {
-  createWindow();
-  // menuInit();
-  electronLocalshortcut.register('CommandOrControl+R', () => {
-    mainWindow.loadURL(gmailUrl);
-  });
-});
+app.on('ready', () => createWindow());
 
 // Quit when all windows are closed.
 app.on('window-all-closed', () => {
@@ -64,7 +51,7 @@ app.on('window-all-closed', () => {
 app.on('activate', () => {
   // On OS X it's common to re-create a window in the app when the
   // dock icon is clicked and there are no other windows open.
-  if (mainWindow === null) {
+  if (windows.length === 0) {
     createWindow();
   }
 });
